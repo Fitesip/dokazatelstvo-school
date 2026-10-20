@@ -1,0 +1,3 @@
+# скрипты и хуки — всегда с LF, иначе sh на Linux/macOS не запустит их
+*.sh text eol=lf
+.githooks/* text eol=lf
