@@ -3,6 +3,9 @@
 # где N — порядковый номер коммита за день (1, 2, 3, …).
 # Релизы помечаются отдельно: npm run release (тег ГГГГММДД без суффикса).
 
+# теги сборок ставим только на основной ветке
+[ "$(git symbolic-ref --short -q HEAD)" = "main" ] || exit 0
+
 git_dir=$(git rev-parse --git-dir)
 # во время rebase/cherry-pick коммиты пересоздаются — не плодим теги
 if [ -d "$git_dir/rebase-merge" ] || [ -d "$git_dir/rebase-apply" ] || [ -f "$git_dir/CHERRY_PICK_HEAD" ]; then
