@@ -1,0 +1,17 @@
+#!/bin/sh
+# Версия сборки: после каждого коммита ставим тег ГГГГММДД-N,
+# где N — порядковый номер коммита за день (1, 2, 3, …).
+# Релизы помечаются отдельно: npm run release (тег ГГГГММДД без суффикса).
+
+git_dir=$(git rev-parse --git-dir)
+# во время rebase/cherry-pick коммиты пересоздаются — не плодим теги
+if [ -d "$git_dir/rebase-merge" ] || [ -d "$git_dir/rebase-apply" ] || [ -f "$git_dir/CHERRY_PICK_HEAD" ]; then
+  exit 0
+fi
+
+day=$(date +%Y%m%d)
+last=$(git tag -l "$day-*" | sed "s/^$day-//" | grep -E '^[0-9]+$' | sort -n | tail -n 1)
+next=$(( ${last:-0} + 1 ))
+tag="$day-$next"
+
+git tag -a "$tag" -m "Сборка $tag" HEAD && echo "Версия: $tag"
