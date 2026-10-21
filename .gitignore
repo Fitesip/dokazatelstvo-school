@@ -7,3 +7,7 @@ next-env.d.ts
 
 # Claude Code (локальные настройки)
 .claude
+
+# локальная база (PGlite), загрузки, секреты
+.data
+.env
