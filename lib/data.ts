@@ -236,6 +236,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
       { label: "Олимпиады", href: "#olympiads" },
       { label: "Учебник", href: "#textbook" },
       { label: "Преподаватель", href: "#teacher" },
+      { label: "Личный кабинет", href: "/cabinet" },
     ],
   },
   {

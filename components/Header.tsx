@@ -22,9 +22,16 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3 sm:gap-5">
+          <Link
+            href="/cabinet"
+            className="hidden whitespace-nowrap text-sm text-blue transition hover:brightness-125 lg:block"
+          >
+            Кабинет
+          </Link>
           <a
             href={PHONE.href}
-            className="hidden whitespace-nowrap text-sm text-text transition hover:text-blue md:block"
+            // на xl рядом меню — телефон не помещается, он есть в футере
+            className="hidden whitespace-nowrap text-sm text-text transition hover:text-blue md:block xl:hidden"
           >
             {PHONE.label}
           </a>
