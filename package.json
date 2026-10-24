@@ -10,9 +10,10 @@
     "prepare": "git config core.hooksPath .githooks && git config push.followTags true || true",
     "release": "sh scripts/release.sh",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx --env-file-if-exists=.env scripts/migrate.ts",
+    "db:migrate": "node --env-file-if-exists=.env scripts/migrate.mjs",
     "db:seed": "tsx --conditions=react-server --env-file-if-exists=.env scripts/seed.ts",
-    "teacher:create": "tsx --conditions=react-server --env-file-if-exists=.env scripts/create-teacher.ts"
+    "teacher:create": "tsx --conditions=react-server --env-file-if-exists=.env scripts/create-teacher.ts",
+    "db:reset": "node -e \"require('fs').rmSync('.data/pglite',{recursive:true,force:true})\" && npm run db:migrate && npm run db:seed"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.10",

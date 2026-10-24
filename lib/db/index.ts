@@ -11,7 +11,13 @@ import * as schema from "./schema";
  */
 function create() {
   if (isPglite) {
-    return drizzlePglite({ connection: { dataDir: dbUrl.slice("pglite:".length) }, schema });
+    const db = drizzlePglite({ connection: { dataDir: dbUrl.slice("pglite:".length) }, schema });
+    // PGlite сбрасывает данные на диск при закрытии: без этого «жёсткая»
+    // остановка dev-сервера портит базу (лечится npm run db:reset)
+    for (const sig of ["SIGINT", "SIGTERM"] as const) {
+      process.once(sig, () => void db.$client.close().finally(() => process.exit(0)));
+    }
+    return db;
   }
   return drizzlePostgres({ connection: { url: dbUrl, max: 10 }, schema });
 }
