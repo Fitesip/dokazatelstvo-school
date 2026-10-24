@@ -1,23 +1,29 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { createTrialLead } from "@/app/actions/lead";
 import { PrimarySubmit } from "./Button";
 
-type Status = "idle" | "error" | "sent";
+type Status = "idle" | "error" | "sending" | "failed" | "sent";
 
 export function TrialForm() {
   const [phone, setPhone] = useState("");
   const [status, setStatus] = useState<Status>("idle");
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (phone.replace(/\D/g, "").length < 10) {
       setStatus("error");
       return;
     }
-    // TODO: отправка заявки (API / Telegram-бот / CRM). Пока бэкенда нет —
-    // заявка никуда не уходит, только показываем подтверждение.
-    setStatus("sent");
+    setStatus("sending");
+    try {
+      const website = String(new FormData(e.currentTarget).get("website") ?? "");
+      // заявка сохраняется в базу и видна преподавателю в админке
+      setStatus((await createTrialLead(phone, website)) ? "sent" : "error");
+    } catch {
+      setStatus("failed");
+    }
   }
 
   if (status === "sent") {
@@ -56,11 +62,20 @@ export function TrialForm() {
             status === "error" ? "border-accent" : "border-card-line"
           }`}
         />
-        <PrimarySubmit type="submit">Записаться</PrimarySubmit>
+        <PrimarySubmit type="submit" disabled={status === "sending"}>
+          {status === "sending" ? "Отправляем…" : "Записаться"}
+        </PrimarySubmit>
       </div>
+      {/* ловушка для ботов: скрыта от людей и скринридеров */}
+      <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden className="hidden" />
       {status === "error" && (
         <p id="trial-phone-error" className="text-[13px] text-accent">
           Введите номер телефона полностью
+        </p>
+      )}
+      {status === "failed" && (
+        <p role="alert" className="text-[13px] text-accent">
+          Не получилось отправить заявку. Попробуйте ещё раз или позвоните нам.
         </p>
       )}
       <p className="text-[12px] leading-[18px] text-text/60">
