@@ -48,8 +48,8 @@ docker compose up -d --build
 
 ## Бэкапы
 
-Сервис `backup` раз в сутки кладёт дамп в `./backups/db-ГГГГММДД-ЧЧММ.sql.gz` и удаляет файлы старше
-14 дней. Копируйте папку `backups` на другой диск/сервер — бэкап на том же диске не спасёт от его поломки.
+Сервис `backup` раз в сутки кладёт в `./backups` дамп базы `db-ГГГГММДД-ЧЧММ.sql.gz` и архив загруженных
+файлов (картинки к вопросам, решения учеников) `uploads-ГГГГММДД-ЧЧММ.tar.gz`, удаляя всё старше 14 дней. Копируйте папку `backups` на другой диск/сервер — бэкап на том же диске не спасёт от его поломки.
 
 Восстановление из дампа:
 
@@ -59,7 +59,14 @@ gunzip -c backups/db-20261021-0300.sql.gz | docker compose exec -T db psql -U ap
 docker compose start app
 ```
 
-Восстанавливать нужно в пустую базу; если в ней уже есть данные — сначала
+Загруженные файлы:
+
+```bash
+docker compose run --rm -v "$PWD/backups:/backups" --entrypoint sh app \
+  -c "tar -xzf /backups/uploads-20261021-0300.tar.gz -C /app/uploads"
+```
+
+Восстанавливать базу нужно в пустую; если в ней уже есть данные — сначала
 `docker compose exec db psql -U app -d app -c "drop schema public cascade; create schema public; drop schema if exists drizzle cascade;"`.
 
 ## Переезд на другой хостинг

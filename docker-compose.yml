@@ -9,6 +9,8 @@ services:
     environment:
       DATABASE_URL: postgres://app:${POSTGRES_PASSWORD}@db:5432/app
       NODE_ENV: production
+    volumes:
+      - uploads:/app/uploads # картинки к вопросам и решения учеников
     depends_on:
       db:
         condition: service_healthy
@@ -44,7 +46,7 @@ services:
     depends_on:
       - app
 
-  # Ежедневный дамп базы в ./backups, хранятся 14 дней
+  # Ежедневно: дамп базы и архив загруженных файлов в ./backups, хранятся 14 дней
   backup:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -52,6 +54,7 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./backups:/backups
+      - uploads:/uploads:ro
     entrypoint:
       - sh
       - -c
@@ -59,7 +62,8 @@ services:
         while true; do
           f=/backups/db-$$(date +%Y%m%d-%H%M).sql.gz
           pg_dump -h db -U app app | gzip > "$$f" && echo "бэкап: $$f"
-          find /backups -name 'db-*.sql.gz' -mtime +14 -delete
+          tar -czf /backups/uploads-$$(date +%Y%m%d-%H%M).tar.gz -C /uploads .
+          find /backups \( -name 'db-*.sql.gz' -o -name 'uploads-*.tar.gz' \) -mtime +14 -delete
           sleep 86400
         done
     depends_on:
@@ -82,5 +86,6 @@ services:
 
 volumes:
   db-data:
+  uploads:
   caddy-data:
   caddy-config:

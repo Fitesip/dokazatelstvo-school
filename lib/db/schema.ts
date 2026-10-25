@@ -219,3 +219,169 @@ export const lead = pgTable(
   },
   (t) => [index("lead_created_idx").on(t.createdAt)],
 );
+
+/* ---------- Уроки (видеозвонок) ---------- */
+
+/** Урок идёт, пока endedAt пустой. Ученики курса видят ссылку на звонок. */
+export const lesson = pgTable(
+  "lesson",
+  {
+    id: text("id").primaryKey(),
+    productId: text("product_id")
+      .notNull()
+      .references(() => product.id, { onDelete: "cascade" }),
+    startedBy: text("started_by").references(() => user.id, { onDelete: "set null" }),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+  },
+  (t) => [index("lesson_product_idx").on(t.productId)],
+);
+
+/* ---------- Файлы (картинки к вопросам, решения учеников) ---------- */
+
+export type FileKind = "question" | "submission";
+
+export const file = pgTable(
+  "file",
+  {
+    id: text("id").primaryKey(), // имя файла на диске = id + расширение
+    ownerId: text("owner_id").references(() => user.id, { onDelete: "set null" }),
+    kind: text("kind").$type<FileKind>().notNull(),
+    name: text("name").notNull(), // исходное имя у пользователя
+    mime: text("mime").notNull(),
+    size: integer("size").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("file_owner_idx").on(t.ownerId)],
+);
+
+/* ---------- Домашние задания ---------- */
+
+export type AssignmentStatus = "draft" | "published";
+
+export const assignment = pgTable(
+  "assignment",
+  {
+    id: text("id").primaryKey(),
+    productId: text("product_id")
+      .notNull()
+      .references(() => product.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    status: text("status").$type<AssignmentStatus>().notNull().default("draft"),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("assignment_product_idx").on(t.productId)],
+);
+
+export type QuestionKind = "choice" | "short" | "long";
+
+export const question = pgTable(
+  "question",
+  {
+    id: text("id").primaryKey(),
+    assignmentId: text("assignment_id")
+      .notNull()
+      .references(() => assignment.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    kind: text("kind").$type<QuestionKind>().notNull(),
+    text: text("text").notNull().default(""),
+    /** short: допустимые ответы */
+    accepted: text("accepted").array().notNull().default(sql`'{}'::text[]`),
+  },
+  (t) => [index("question_assignment_idx").on(t.assignmentId)],
+);
+
+export const questionOption = pgTable(
+  "question_option",
+  {
+    id: text("id").primaryKey(),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    text: text("text").notNull(),
+    correct: boolean("correct").notNull().default(false),
+  },
+  (t) => [index("option_question_idx").on(t.questionId)],
+);
+
+export const questionImage = pgTable(
+  "question_image",
+  {
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    fileId: text("file_id")
+      .notNull()
+      .references(() => file.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.questionId, t.fileId] })],
+);
+
+/* ---------- Сданные работы ---------- */
+
+export type SubmissionStatus = "submitted" | "checked";
+
+/** Одна попытка на ученика и ДЗ. */
+export const submission = pgTable(
+  "submission",
+  {
+    id: text("id").primaryKey(),
+    assignmentId: text("assignment_id")
+      .notNull()
+      .references(() => assignment.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    status: text("status").$type<SubmissionStatus>().notNull().default("submitted"),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
+    /** оценка по 5-балльной шкале */
+    grade: integer("grade"),
+    comment: text("comment"),
+    checkedAt: timestamp("checked_at", { withTimezone: true }),
+    checkedBy: text("checked_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    uniqueIndex("submission_once_idx").on(t.assignmentId, t.userId),
+    index("submission_status_idx").on(t.status),
+  ],
+);
+
+export const answer = pgTable(
+  "answer",
+  {
+    submissionId: text("submission_id")
+      .notNull()
+      .references(() => submission.id, { onDelete: "cascade" }),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    /** choice: id выбранных вариантов; short/long: текст */
+    optionIds: text("option_ids").array().notNull().default(sql`'{}'::text[]`),
+    text: text("text").notNull().default(""),
+    /** результат автопроверки (для long — пусто) */
+    autoCorrect: boolean("auto_correct"),
+  },
+  (t) => [primaryKey({ columns: [t.submissionId, t.questionId] })],
+);
+
+export const answerFile = pgTable(
+  "answer_file",
+  {
+    submissionId: text("submission_id")
+      .notNull()
+      .references(() => submission.id, { onDelete: "cascade" }),
+    questionId: text("question_id")
+      .notNull()
+      .references(() => question.id, { onDelete: "cascade" }),
+    fileId: text("file_id")
+      .notNull()
+      .references(() => file.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.submissionId, t.fileId] })],
+);

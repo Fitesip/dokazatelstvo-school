@@ -23,8 +23,9 @@ RUN DATABASE_URL=postgres://build:build@localhost:5432/build \
 # ---------- запуск ----------
 FROM node:22-alpine AS runner
 WORKDIR /app
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
-RUN addgroup -S app && adduser -S app -G app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0 UPLOAD_DIR=/app/uploads
+RUN addgroup -S app && adduser -S app -G app \
+ && mkdir -p /app/uploads && chown app:app /app/uploads
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=app:app /app/.next/standalone ./
