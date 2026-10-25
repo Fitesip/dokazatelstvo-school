@@ -1,0 +1,7 @@
+# SITE_ADDRESS из .env:
+#   ":80"            — пока нет домена, сайт по IP без HTTPS
+#   "example.ru"     — домен: Caddy сам получит и продлит сертификат
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}

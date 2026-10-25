@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // для Docker: минимальный сервер со своими node_modules (.next/standalone)
+  output: "standalone",
   // PGlite грузит свой .wasm с диска — не даём сборщику его упаковывать
   serverExternalPackages: ["@electric-sql/pglite"],
   images: {
