@@ -11,6 +11,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       userName={user.name}
       nav={[
         { href: "/admin", label: "Заявки" },
+        { href: "/admin/courses", label: "Курсы и уроки" },
+        { href: "/admin/review", label: "Проверка ДЗ" },
         { href: "/admin/orders", label: "Заказы" },
         { href: "/admin/students", label: "Ученики" },
         { href: "/admin/products", label: "Номера и наборы" },
