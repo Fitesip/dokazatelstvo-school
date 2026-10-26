@@ -1,24 +1,31 @@
+import { and, eq, isNotNull } from "drizzle-orm";
+import Link from "next/link";
 import { Calendar, type CalEvent } from "@/components/cabinet/Calendar";
+import { LiveLessons } from "@/components/cabinet/LiveLessons";
 import { PageTitle } from "@/components/cabinet/Shell";
 import { FormNote } from "@/components/ui/Field";
+import { db, schema } from "@/lib/db";
+import { liveLessonsFor } from "@/lib/lessons";
 import { getEnrollments } from "@/lib/orders";
 import { requireUser } from "@/lib/session";
 
-/** Пример расписания, пока нет настоящих занятий и ДЗ (этап 4). */
-function demoEvents(): CalEvent[] {
-  const now = new Date();
-  const day = (n: number) => {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + n);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  };
-  return [
-    { date: day(0), time: "18:00", title: "Занятие: №14", subtitle: "Стереометрия, разбор ДЗ", color: "accent" },
-    { date: day(1), title: "Дедлайн ДЗ: №13", subtitle: "Тест + развёрнутое решение", color: "gold" },
-    { date: day(1), time: "17:30", title: "Занятие: №13", subtitle: "Тригонометрические уравнения", color: "accent" },
-    { date: day(3), time: "18:00", title: "Пробник", subtitle: "Вариант 14, часть 1", color: "blue" },
-    { date: day(6), time: "16:00", title: "Занятие: №15", subtitle: "Неравенства", color: "accent" },
-    { date: day(9), title: "Разбор пробника", subtitle: "Комментарии по ошибкам", color: "green" },
-  ];
+/** Сроки опубликованных ДЗ по купленным номерам — события календаря. */
+async function deadlineEvents(userId: string): Promise<CalEvent[]> {
+  const { assignment, enrollment, product, submission } = schema;
+  const rows = await db
+    .select({ id: assignment.id, title: assignment.title, dueAt: assignment.dueAt, course: product.title, status: submission.status })
+    .from(assignment)
+    .innerJoin(enrollment, and(eq(enrollment.productId, assignment.productId), eq(enrollment.userId, userId)))
+    .innerJoin(product, eq(product.id, assignment.productId))
+    .leftJoin(submission, and(eq(submission.assignmentId, assignment.id), eq(submission.userId, userId)))
+    .where(and(eq(assignment.status, "published"), isNotNull(assignment.dueAt)));
+  return rows.map((r) => ({
+    // дата срока по Москве в формате YYYY-MM-DD
+    date: r.dueAt!.toLocaleDateString("sv-SE", { timeZone: "Europe/Moscow" }),
+    title: `Срок ДЗ: ${r.title}`,
+    subtitle: `${r.course} · ${r.status === "checked" ? "проверено" : r.status === "submitted" ? "сдано" : "не сдано"}`,
+    color: r.status ? "green" : "gold",
+  }));
 }
 
 export default async function CabinetPage({
@@ -28,13 +35,19 @@ export default async function CabinetPage({
 }) {
   const { user } = await requireUser("/cabinet");
   const { welcome, paid } = await searchParams;
-  const items = await getEnrollments(user.id);
+  const [items, events, live] = await Promise.all([
+    getEnrollments(user.id),
+    deadlineEvents(user.id),
+    liveLessonsFor(user.id, user.role === "teacher"),
+  ]);
 
   return (
     <>
-      <PageTitle subtitle="Расписание, домашние задания и прогресс — здесь.">
+      <PageTitle subtitle="Уроки, домашние задания и оценки — здесь.">
         Здравствуйте, {user.name.split(" ")[0]}!
       </PageTitle>
+
+      <LiveLessons initial={live.map((l) => ({ id: l.id, title: l.title }))} />
 
       {welcome && <FormNote>Аккаунт создан, покупка добавлена. Добро пожаловать!</FormNote>}
       {paid && !welcome && <FormNote>Оплата прошла — новые номера уже в списке ниже.</FormNote>}
@@ -43,28 +56,28 @@ export default async function CabinetPage({
       )}
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-[19px] font-bold text-text">Календарь</h2>
-        <Calendar events={demoEvents()} />
-        <p className="text-[12px] text-text/50">Пока показан пример расписания — настоящие занятия появятся позже.</p>
-      </section>
-
-      <section className="flex flex-col gap-3">
         <h2 className="text-[19px] font-bold text-text">Мои номера</h2>
         {items.length === 0 ? (
           <p className="text-[15px] text-text/60">Пока ничего не куплено.</p>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {items.map((p) => (
-              <li key={p.id} className="glow-line-red flex flex-col gap-1 py-2 pl-5">
-                <span className="text-[12px] font-bold uppercase tracking-wide text-accent">{p.exam}</span>
-                <span className="glow-blue text-[18px] font-bold text-blue">{p.title}</span>
-                <span className="text-[13px] text-text/60">
-                  доступ с {p.since.toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}
-                </span>
+              <li key={p.id}>
+                <Link href={`/cabinet/course/${p.id}`} className="glow-line-red group flex flex-col gap-1 py-2 pl-5">
+                  <span className="text-[12px] font-bold uppercase tracking-wide text-accent">{p.exam}</span>
+                  <span className="glow-blue text-[18px] font-bold text-blue group-hover:underline">{p.title}</span>
+                  <span className="text-[13px] text-text/60">ДЗ и оценки →</span>
+                </Link>
               </li>
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-[19px] font-bold text-text">Календарь</h2>
+        <Calendar events={events} />
+        <p className="text-[12px] text-text/50">В календаре — сроки сдачи ДЗ. Расписание занятий добавим позже.</p>
       </section>
     </>
   );
