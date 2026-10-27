@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node --env-file-if-exists=.env scripts/dev.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",
@@ -13,10 +13,9 @@
     "db:migrate": "node --env-file-if-exists=.env scripts/migrate.mjs",
     "db:seed": "tsx --conditions=react-server --env-file-if-exists=.env scripts/seed.ts",
     "teacher:create": "tsx --conditions=react-server --env-file-if-exists=.env scripts/create-teacher.ts",
-    "db:reset": "node -e \"require('fs').rmSync('.data/pglite',{recursive:true,force:true})\" && npm run db:migrate && npm run db:seed"
+    "db:reset": "node -e \"require('fs').rmSync('.data/pglite',{recursive:true,force:true});console.log('Локальная база удалена — npm run dev создаст новую с демо-каталогом.')\""
   },
   "dependencies": {
-    "@electric-sql/pglite": "^0.5.10",
     "better-auth": "^1.7.12",
     "drizzle-orm": "^0.45.4",
     "next": "^15.5.0",
@@ -28,6 +27,8 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
+    "@electric-sql/pglite-socket": "^0.2.13",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^22.0.0",
     "@types/nodemailer": "^8.0.2",

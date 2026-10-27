@@ -9,28 +9,27 @@ Next.js (App Router) + TypeScript + Tailwind CSS 4, PostgreSQL (Drizzle ORM), Be
 ```bash
 npm install
 cp .env.example .env     # заполнить BETTER_AUTH_SECRET (openssl rand -base64 32)
-npm run db:reset         # локальная база + демо-каталог
-npm run teacher:create -- teacher@example.com "Имя Фамилия" пароль
-npm run dev
+npm run dev              # база + сайт на http://localhost:3000
 ```
 
-Локально база — PGlite (PostgreSQL внутри Node, файлы в `.data/`), Docker не нужен.
-Пока SMTP не настроен, письма печатаются в консоль `npm run dev`.
+`npm run dev` сам поднимает локальную базу: PGlite (PostgreSQL внутри Node, файлы в `.data/pglite`)
+раздаётся на `127.0.0.1:5433`, применяет миграции, а в новую базу заливает демо-каталог.
+Docker не нужен. Сайт подключается к базе как к обычному PostgreSQL — так же, как на сервере.
+
+Пока работает `npm run dev`, в соседнем терминале:
 
 | Команда | Что делает |
 | --- | --- |
-| `npm run db:generate` | SQL-миграция из изменений `lib/db/schema.ts` |
-| `npm run db:migrate` | применить миграции |
-| `npm run db:seed` | демо-номера и наборы |
-| `npm run db:reset` | пересоздать локальную базу с нуля |
-| `npm run teacher:create` | создать преподавателя (публичной регистрации нет) |
+| `npm run teacher:create -- teacher@example.com "Имя" пароль` | создать преподавателя (публичной регистрации нет) |
+| `npm run db:seed` | обновить демо-номера и наборы |
+| `npm run db:generate` | SQL-миграция из изменений `lib/db/schema.ts` (применится при следующем `npm run dev`) |
 
-PGlite открывается только одним процессом: команды `db:*` и `teacher:create` запускайте,
-когда `npm run dev` остановлен (Ctrl+C). Если dev-сервер был убит «жёстко» и база
-перестала открываться — `npm run db:reset`.
+`npm run db:reset` (при остановленном `npm run dev`) удаляет локальную базу — следующий запуск создаст новую.
+Останавливайте `npm run dev` через Ctrl+C: так база успевает корректно закрыться.
+Второй `npm run dev` из той же папки не запустится — база открывается только одним процессом.
 
-Полезные адреса: `/dev/shop` — демо-витрина (при `DEMO_SHOP=1`), `/cabinet` — кабинет,
-`/admin` — админка.
+Пока SMTP не настроен, письма печатаются в консоль `npm run dev`.
+Полезные адреса: `/dev/shop` — демо-витрина (при `DEMO_SHOP=1`), `/cabinet` — кабинет, `/admin` — админка.
 
 Развёртывание на сервере — [DEPLOY.md](DEPLOY.md).
 
