@@ -9,6 +9,9 @@ import { sendMail } from "./mail";
 
 export const auth = betterAuth({
   appName: "Доказательство",
+  // при разработке сайт бывает и на :3000, и на :3001 — вход должен работать на обоих
+  trustedOrigins:
+    process.env.NODE_ENV === "production" ? [] : ["http://localhost:3000", "http://localhost:3001"],
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
