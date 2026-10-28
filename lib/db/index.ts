@@ -3,11 +3,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { dbUrl } from "./config";
 import * as schema from "./schema";
 
-/**
- * Подключение к PostgreSQL. Локально это PGlite, который раздаёт `npm run dev`
- * (scripts/dev.mjs) — сам сайт файлы базы не открывает, поэтому сколько бы
- * процессов ни запустил Next.js, база не портится.
- */
+/** Подключение к PostgreSQL (локально его поднимает `npm run dev`, на сервере — docker-compose). */
 function create() {
   return drizzle({ connection: { url: dbUrl, max: 10 }, schema });
 }
