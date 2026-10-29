@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/cabinet/Shell";
 import { FormNote } from "@/components/ui/Field";
 import { isEnrolled } from "@/lib/courses";
+import { formatDue } from "@/lib/due";
 import { getAssignmentFull, getSubmission } from "@/lib/homework";
 import { requireUser } from "@/lib/session";
 import { HomeworkForm, type StudentQuestion } from "./HomeworkForm";
@@ -15,7 +16,7 @@ export default async function StudentHomeworkPage({ params }: { params: Promise<
   if (!a || a.status !== "published" || !(await isEnrolled(user.id, a.productId))) notFound();
 
   const sub = await getSubmission(id, user.id);
-  const due = a.dueAt?.toLocaleDateString("ru-RU", { day: "numeric", month: "long", timeZone: "Europe/Moscow" });
+  const due = a.dueAt ? formatDue(a.dueAt, a.dueHasTime) : null;
 
   // до проверки в браузер не уходят ни отметки правильных вариантов, ни правильные ответы
   const questions: StudentQuestion[] = a.questions.map((q) => ({

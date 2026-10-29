@@ -5,6 +5,7 @@ import { LiveLessons } from "@/components/cabinet/LiveLessons";
 import { PageTitle } from "@/components/cabinet/Shell";
 import { FormNote } from "@/components/ui/Field";
 import { db, schema } from "@/lib/db";
+import { dueDate, dueTime } from "@/lib/due";
 import { liveLessonsFor } from "@/lib/lessons";
 import { getEnrollments } from "@/lib/orders";
 import { requireUser } from "@/lib/session";
@@ -13,15 +14,22 @@ import { requireUser } from "@/lib/session";
 async function deadlineEvents(userId: string): Promise<CalEvent[]> {
   const { assignment, enrollment, product, submission } = schema;
   const rows = await db
-    .select({ id: assignment.id, title: assignment.title, dueAt: assignment.dueAt, course: product.title, status: submission.status })
+    .select({
+      id: assignment.id,
+      title: assignment.title,
+      dueAt: assignment.dueAt,
+      dueHasTime: assignment.dueHasTime,
+      course: product.title,
+      status: submission.status,
+    })
     .from(assignment)
     .innerJoin(enrollment, and(eq(enrollment.productId, assignment.productId), eq(enrollment.userId, userId)))
     .innerJoin(product, eq(product.id, assignment.productId))
     .leftJoin(submission, and(eq(submission.assignmentId, assignment.id), eq(submission.userId, userId)))
     .where(and(eq(assignment.status, "published"), isNotNull(assignment.dueAt)));
   return rows.map((r) => ({
-    // дата срока по Москве в формате YYYY-MM-DD
-    date: r.dueAt!.toLocaleDateString("sv-SE", { timeZone: "Europe/Moscow" }),
+    date: dueDate(r.dueAt!),
+    time: r.dueHasTime ? dueTime(r.dueAt!) : undefined,
     title: `Срок ДЗ: ${r.title}`,
     subtitle: `${r.course} · ${r.status === "checked" ? "проверено" : r.status === "submitted" ? "сдано" : "не сдано"}`,
     color: r.status ? "green" : "gold",
@@ -47,7 +55,7 @@ export default async function CabinetPage({
         Здравствуйте, {user.name.split(" ")[0]}!
       </PageTitle>
 
-      <LiveLessons initial={live.map((l) => ({ id: l.id, title: l.title }))} />
+      <LiveLessons initial={live.map((l) => ({ id: l.id, title: l.title, callUrl: l.callUrl }))} />
 
       {welcome && <FormNote>Аккаунт создан, покупка добавлена. Добро пожаловать!</FormNote>}
       {paid && !welcome && <FormNote>Оплата прошла — новые номера уже в списке ниже.</FormNote>}

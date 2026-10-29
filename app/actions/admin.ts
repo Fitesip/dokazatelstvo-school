@@ -13,7 +13,7 @@ import {
   setPublished,
   type EditorAssignment,
 } from "@/lib/homework";
-import { endLesson, startLesson } from "@/lib/lessons";
+import { endLesson, normalizeCallUrl, startLesson } from "@/lib/lessons";
 import { getSession } from "@/lib/session";
 
 async function assertTeacher() {
@@ -57,11 +57,20 @@ export async function updateProductAction(_: ProductState, formData: FormData): 
 
 /* ---------- Уроки ---------- */
 
-export async function startLessonAction(formData: FormData) {
+export interface StartLessonState {
+  error?: string;
+  ok?: boolean;
+}
+
+/** «Начать урок»: преподаватель даёт ссылку на уже созданный звонок — ученики переходят прямо по ней. */
+export async function startLessonAction(_: StartLessonState, formData: FormData): Promise<StartLessonState> {
   const s = await getSession();
   if (s?.user.role !== "teacher") throw new Error("Нет доступа");
-  await startLesson(String(formData.get("productId")), s.user.id);
+  const callUrl = normalizeCallUrl(String(formData.get("callUrl") ?? ""));
+  if (!callUrl) return { error: "Вставьте ссылку на звонок, например https://telemost.yandex.ru/j/…" };
+  await startLesson(String(formData.get("productId")), s.user.id, callUrl);
   revalidatePath("/admin/courses", "layout");
+  return { ok: true };
 }
 
 export async function endLessonAction(formData: FormData) {

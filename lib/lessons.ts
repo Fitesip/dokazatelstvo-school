@@ -1,17 +1,46 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { db, schema } from "./db";
 
 const { lesson, product, enrollment } = schema;
 
-/** Начать урок по номеру. Если урок уже идёт — возвращаем его, второй не создаём. */
-export async function startLesson(productId: string, teacherId: string) {
+/**
+ * Ссылка на звонок от преподавателя. Только http(s) — чтобы в кнопку ученика
+ * нельзя было подставить javascript: и т. п. Без схемы — дописываем https://.
+ */
+export function normalizeCallUrl(raw: string) {
+  const v = raw.trim();
+  if (!v) return null;
+  try {
+    const u = new URL(/^[a-z][a-z0-9+.-]*:/i.test(v) ? v : `https://${v}`);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Начать урок по номеру со ссылкой на звонок. Если урок уже идёт — обновляем ссылку. */
+export async function startLesson(productId: string, teacherId: string, callUrl: string) {
   const live = await liveLesson(productId);
-  if (live) return live.id;
+  if (live) {
+    await db.update(lesson).set({ callUrl }).where(eq(lesson.id, live.id));
+    return live.id;
+  }
   const id = randomUUID();
-  await db.insert(lesson).values({ id, productId, startedBy: teacherId });
+  await db.insert(lesson).values({ id, productId, startedBy: teacherId, callUrl });
   return id;
+}
+
+/** Ссылка с прошлого урока курса — подставляем в форму, обычно комната одна и та же. */
+export async function lastCallUrl(productId: string) {
+  const [l] = await db
+    .select({ callUrl: lesson.callUrl })
+    .from(lesson)
+    .where(and(eq(lesson.productId, productId), isNotNull(lesson.callUrl)))
+    .orderBy(desc(lesson.startedAt))
+    .limit(1);
+  return l?.callUrl ?? "";
 }
 
 export async function endLesson(productId: string) {
@@ -33,7 +62,7 @@ export async function liveLesson(productId: string) {
 /** Идущие уроки, которые видит пользователь: ученик — по купленным номерам, преподаватель — все. */
 export async function liveLessonsFor(userId: string, isTeacher: boolean) {
   const base = db
-    .select({ id: lesson.id, productId: lesson.productId, title: product.title, startedAt: lesson.startedAt })
+    .select({ id: lesson.id, productId: lesson.productId, title: product.title, callUrl: lesson.callUrl, startedAt: lesson.startedAt })
     .from(lesson)
     .innerJoin(product, eq(product.id, lesson.productId));
   if (isTeacher) return base.where(isNull(lesson.endedAt));
@@ -42,11 +71,3 @@ export async function liveLessonsFor(userId: string, isTeacher: boolean) {
     .where(isNull(lesson.endedAt));
 }
 
-export async function getLesson(id: string) {
-  const [l] = await db
-    .select({ lesson, title: product.title })
-    .from(lesson)
-    .innerJoin(product, eq(product.id, lesson.productId))
-    .where(eq(lesson.id, id));
-  return l ?? null;
-}

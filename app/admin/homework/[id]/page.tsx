@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCourse } from "@/lib/courses";
+import { dueDate, dueTime } from "@/lib/due";
 import { getAssignmentFull } from "@/lib/homework";
 import { HomeworkEditor } from "./HomeworkEditor";
 
@@ -9,9 +10,6 @@ export default async function HomeworkEditorPage({ params }: { params: Promise<{
   const a = await getAssignmentFull(id);
   if (!a) notFound();
   const course = await getCourse(a.productId);
-
-  // дата срока в часовом поясе Москвы, формат для <input type="date">
-  const dueDate = a.dueAt ? a.dueAt.toLocaleDateString("sv-SE", { timeZone: "Europe/Moscow" }) : "";
 
   return (
     <>
@@ -22,7 +20,13 @@ export default async function HomeworkEditorPage({ params }: { params: Promise<{
         id={a.id}
         published={a.status === "published"}
         locked={a.submissions > 0}
-        initial={{ title: a.title, description: a.description, dueDate, questions: a.questions }}
+        initial={{
+          title: a.title,
+          description: a.description,
+          dueDate: a.dueAt ? dueDate(a.dueAt) : "",
+          dueTime: a.dueAt && a.dueHasTime ? dueTime(a.dueAt) : "",
+          questions: a.questions,
+        }}
       />
     </>
   );

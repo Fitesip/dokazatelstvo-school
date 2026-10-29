@@ -26,6 +26,8 @@ export interface EditorAssignment {
   description: string;
   /** YYYY-MM-DD или пусто */
   dueDate: string;
+  /** HH:MM или пусто (тогда «весь день») */
+  dueTime: string;
   questions: EditorQuestion[];
 }
 

@@ -6,17 +6,16 @@ import { LessonControl } from "@/components/cabinet/LessonControl";
 import { PageTitle } from "@/components/cabinet/Shell";
 import { Table, Td } from "@/components/cabinet/Table";
 import { getCourse } from "@/lib/courses";
+import { formatDue } from "@/lib/due";
 import { courseJournal, listAssignments } from "@/lib/homework";
-import { liveLesson } from "@/lib/lessons";
+import { lastCallUrl, liveLesson } from "@/lib/lessons";
 
-const dueText = (d: Date | null) =>
-  d ? `до ${d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", timeZone: "Europe/Moscow" })}` : "без срока";
 
 export default async function AdminCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const course = await getCourse(id);
   if (!course) notFound();
-  const [live, all, journal] = await Promise.all([liveLesson(id), listAssignments(id), courseJournal(id)]);
+  const [live, lastUrl, all, journal] = await Promise.all([liveLesson(id), lastCallUrl(id), listAssignments(id), courseJournal(id)]);
 
   return (
     <>
@@ -25,7 +24,7 @@ export default async function AdminCoursePage({ params }: { params: Promise<{ id
           ← Все курсы
         </Link>
         <PageTitle>{course.title}</PageTitle>
-        <LessonControl productId={id} liveId={live?.id ?? null} />
+        <LessonControl productId={id} live={!!live} lastUrl={lastUrl} />
       </div>
 
       <section className="flex flex-col gap-3">
@@ -49,7 +48,7 @@ export default async function AdminCoursePage({ params }: { params: Promise<{ id
                 </Link>
                 <span className="text-[13px] text-text/60">
                   {a.status === "published" ? <span className="text-green">опубликовано</span> : "черновик"} ·{" "}
-                  {dueText(a.dueAt)}
+                  {a.dueAt ? `до ${formatDue(a.dueAt, a.dueHasTime)}` : "без срока"}
                 </span>
               </li>
             ))}

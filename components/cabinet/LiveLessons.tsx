@@ -1,15 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface Live {
   id: string;
   title: string;
+  /** ссылка на звонок от преподавателя (Телемост, Zoom и т. п.) */
+  callUrl: string | null;
 }
 
 /**
- * Плашка «Идёт урок — Подключиться». Появляется сама, без перезагрузки:
+ * Плашка «Идёт урок — Зайти в звонок» (сразу по ссылке преподавателя). Появляется сама, без перезагрузки:
  * кабинет раз в 15 секунд спрашивает сервер (и сразу при возврате на вкладку).
  */
 export function LiveLessons({ initial }: { initial: Live[] }) {
@@ -49,12 +50,18 @@ export function LiveLessons({ initial }: { initial: Live[] }) {
               Идёт урок: <b>{l.title}</b>
             </span>
           </div>
-          <Link
-            href={`/lesson/${l.id}`}
-            className="rounded-[3px] bg-accent px-4 py-2 text-[14px] font-bold text-ink transition hover:brightness-110"
-          >
-            Подключиться
-          </Link>
+          {l.callUrl ? (
+            <a
+              href={l.callUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-[3px] bg-accent px-4 py-2 text-[14px] font-bold text-ink transition hover:brightness-110"
+            >
+              Зайти в звонок
+            </a>
+          ) : (
+            <span className="text-[13px] text-text/60">ссылка на звонок скоро появится</span>
+          )}
         </div>
       ))}
     </div>

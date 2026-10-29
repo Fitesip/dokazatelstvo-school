@@ -89,8 +89,22 @@ export function HomeworkEditor({
         <Field label="Название" value={data.title} onChange={(e) => update({ title: e.target.value })} />
       </div>
       <TextArea label="Описание (необязательно)" value={data.description} onChange={(v) => update({ description: v })} />
-      <div className="max-w-[240px]">
-        <Field label="Срок сдачи (необязательно)" type="date" value={data.dueDate} onChange={(e) => update({ dueDate: e.target.value })} />
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="w-[200px]">
+          <Field label="Срок сдачи (необязательно)" type="date" value={data.dueDate} onChange={(e) => update({ dueDate: e.target.value })} />
+        </div>
+        <div className="w-[140px]">
+          <Field
+            label="Время (МСК)"
+            type="time"
+            value={data.dueTime}
+            disabled={!data.dueDate}
+            onChange={(e) => update({ dueTime: e.target.value })}
+          />
+        </div>
+        <span className="pb-3 text-[13px] text-text/50">
+          {data.dueDate ? (data.dueTime ? "сдать до указанного времени" : "без времени — до конца дня") : ""}
+        </span>
       </div>
 
       {locked && (

@@ -15,6 +15,20 @@
       "when": 1792532481704,
       "tag": "0001_lessons_homework",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792537949252,
+      "tag": "0002_homework_due_time",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792538133774,
+      "tag": "0003_lesson_call_url",
+      "breakpoints": true
     }
   ]
 }

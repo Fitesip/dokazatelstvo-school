@@ -222,7 +222,7 @@ export const lead = pgTable(
 
 /* ---------- Уроки (видеозвонок) ---------- */
 
-/** Урок идёт, пока endedAt пустой. Ученики курса видят ссылку на звонок. */
+/** Урок идёт, пока endedAt пустой. Ученики курса видят кнопку «Зайти в звонок». */
 export const lesson = pgTable(
   "lesson",
   {
@@ -230,6 +230,8 @@ export const lesson = pgTable(
     productId: text("product_id")
       .notNull()
       .references(() => product.id, { onDelete: "cascade" }),
+    /** ссылка на звонок, которую дал преподаватель (Телемост, Zoom и т. п.) */
+    callUrl: text("call_url"),
     startedBy: text("started_by").references(() => user.id, { onDelete: "set null" }),
     startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
     endedAt: timestamp("ended_at", { withTimezone: true }),
@@ -270,6 +272,8 @@ export const assignment = pgTable(
     description: text("description").notNull().default(""),
     status: text("status").$type<AssignmentStatus>().notNull().default("draft"),
     dueAt: timestamp("due_at", { withTimezone: true }),
+    /** указано ли время сдачи (иначе — «весь день», срок до 23:59) */
+    dueHasTime: boolean("due_has_time").notNull().default(false),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),

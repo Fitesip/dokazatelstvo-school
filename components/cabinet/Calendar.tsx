@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 export type EventColor = "accent" | "blue" | "green" | "gold";
 
@@ -64,10 +64,37 @@ export function Calendar({ events }: { events: CalEvent[] }) {
 
   const next = addDays(selected, 1);
   const isToday = keyOf(selected) === keyOf(today);
+  // выбранный день и следующий — всегда; дальше — ближайшие дни, в которых что-то есть
+  const upcoming: Date[] = [];
+  for (let i = 2; i <= 60 && upcoming.length < 8; i++) {
+    const d = addDays(selected, i);
+    if (byDay.has(keyOf(d))) upcoming.push(d);
+  }
   const sections = [
-    { label: isToday ? `Сегодня · ${dayTitle(selected)}` : dayTitle(selected), date: selected },
-    { label: isToday ? "Завтра" : dayTitle(next), date: next },
+    { label: isToday ? `Сегодня · ${dayTitle(selected)}` : dayTitle(selected), date: selected, extra: false },
+    { label: isToday ? "Завтра" : dayTitle(next), date: next, extra: false },
+    ...upcoming.map((d) => ({ label: dayTitle(d), date: d, extra: true })),
   ];
+
+  // Дополнительные дни показываем, только пока они целиком помещаются по высоте
+  // (на широком экране панель не выше сетки месяца; на телефоне — максимум 3 дня).
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState(upcoming.length);
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    const measure = () => {
+      const wide = window.matchMedia("(min-width: 768px)").matches;
+      const extras = Array.from(panel.querySelectorAll<HTMLElement>("[data-extra]"));
+      if (!wide) return setFit(Math.min(3, extras.length));
+      const limit = panel.clientHeight;
+      setFit(extras.filter((el) => el.offsetTop + el.offsetHeight <= limit).length);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(panel);
+    return () => ro.disconnect();
+  }, [selected, events]);
 
   const shiftMonth = (n: number) => setMonth(new Date(month.getFullYear(), month.getMonth() + n, 1));
 
@@ -121,31 +148,40 @@ export function Calendar({ events }: { events: CalEvent[] }) {
       </div>
 
       {/* события */}
-      <div className="flex flex-col gap-6 md:border-l md:border-card-line md:pl-8">
-        {sections.map(({ label, date }) => {
-          const list = byDay.get(keyOf(date)) ?? [];
-          return (
-            <section key={label} className="flex flex-col gap-3">
-              <h4 className="text-[15px] font-bold uppercase tracking-wide text-text/60">{label}</h4>
-              {list.length === 0 ? (
-                <p className="text-[15px] font-bold text-text/30">Нет событий</p>
-              ) : (
-                <ul className="flex flex-col gap-3">
-                  {list.map((e, i) => (
-                    <li key={i} className="flex items-stretch gap-3">
-                      <span className="w-[76px] shrink-0 pt-0.5 text-[14px] text-text/80">{e.time ?? "Весь день"}</span>
-                      <span aria-hidden className={`w-1 shrink-0 rounded-full ${BAR[e.color]}`} />
-                      <span className="flex min-w-0 flex-col">
-                        <span className="text-[16px] font-bold text-text">{e.title}</span>
-                        {e.subtitle && <span className="truncate text-[13px] text-text/60">{e.subtitle}</span>}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          );
-        })}
+      <div className="relative md:border-l md:border-card-line md:pl-8">
+        <div ref={panelRef} className="flex flex-col gap-6 md:absolute md:inset-0 md:left-8 md:overflow-hidden">
+          {sections.map(({ label, date, extra }, i) => {
+            const list = byDay.get(keyOf(date)) ?? [];
+            // не поместившиеся дни: на телефоне убираем совсем, на компьютере — прячем (их всё равно обрезает край)
+            const hidden = extra && i - 2 >= fit;
+            return (
+              <section
+                key={label}
+                data-extra={extra || undefined}
+                aria-hidden={hidden || undefined}
+                className={`flex flex-col gap-3 ${hidden ? "max-md:hidden md:invisible" : ""}`}
+              >
+                <h4 className="text-[15px] font-bold uppercase tracking-wide text-text/60">{label}</h4>
+                {list.length === 0 ? (
+                  <p className="text-[15px] font-bold text-text/30">Нет событий</p>
+                ) : (
+                  <ul className="flex flex-col gap-3">
+                    {list.map((e, j) => (
+                      <li key={j} className="flex items-stretch gap-3">
+                        <span className="w-[76px] shrink-0 pt-0.5 text-[14px] text-text/80">{e.time ?? "Весь день"}</span>
+                        <span aria-hidden className={`w-1 shrink-0 rounded-full ${BAR[e.color]}`} />
+                        <span className="flex min-w-0 flex-col">
+                          <span className="text-[16px] font-bold text-text">{e.title}</span>
+                          {e.subtitle && <span className="truncate text-[13px] text-text/60">{e.subtitle}</span>}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

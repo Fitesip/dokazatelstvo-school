@@ -1,4 +1,4 @@
-import { count, eq, isNull } from "drizzle-orm";
+import { count, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import Link from "next/link";
 import { LessonControl } from "@/components/cabinet/LessonControl";
 import { PageTitle } from "@/components/cabinet/Shell";
@@ -12,6 +12,12 @@ export default async function CoursesPage() {
     .from(schema.enrollment)
     .groupBy(schema.enrollment.productId);
   const live = await db.select().from(schema.lesson).where(isNull(schema.lesson.endedAt));
+  // последняя ссылка на звонок по каждому курсу — подставим в форму
+  const lastUrls = await db
+    .select({ productId: schema.lesson.productId, callUrl: schema.lesson.callUrl })
+    .from(schema.lesson)
+    .where(isNotNull(schema.lesson.callUrl))
+    .orderBy(desc(schema.lesson.startedAt));
   const homework = await db
     .select({ productId: schema.assignment.productId, n: count() })
     .from(schema.assignment)
@@ -37,7 +43,11 @@ export default async function CoursesPage() {
                 учеников: {num(students, c.id)} · ДЗ опубликовано: {num(homework, c.id)}
               </span>
             </div>
-            <LessonControl productId={c.id} liveId={live.find((l) => l.productId === c.id)?.id ?? null} />
+            <LessonControl
+              productId={c.id}
+              live={live.some((l) => l.productId === c.id)}
+              lastUrl={lastUrls.find((l) => l.productId === c.id)?.callUrl ?? ""}
+            />
           </li>
         ))}
       </ul>

@@ -3,11 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/cabinet/Shell";
 import { getCourse, isEnrolled } from "@/lib/courses";
+import { formatDue } from "@/lib/due";
 import { db, schema } from "@/lib/db";
 import { listAssignments } from "@/lib/homework";
 import { requireUser } from "@/lib/session";
-
-const fmt = (d: Date) => d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", timeZone: "Europe/Moscow" });
 
 export default async function StudentCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -44,7 +43,7 @@ export default async function StudentCoursePage({ params }: { params: Promise<{ 
                   <Link href={`/cabinet/hw/${a.id}`} className="flex flex-wrap items-center justify-between gap-3 py-4 hover:bg-white/[0.03]">
                     <span className="flex flex-col">
                       <span className="text-[16px] font-bold text-blue">{a.title}</span>
-                      {a.dueAt && <span className={`text-[13px] ${overdue ? "text-accent" : "text-text/60"}`}>срок — {fmt(a.dueAt)}</span>}
+                      {a.dueAt && <span className={`text-[13px] ${overdue ? "text-accent" : "text-text/60"}`}>срок — {formatDue(a.dueAt, a.dueHasTime)}</span>}
                     </span>
                     <span className="text-[14px]">
                       {!s && <span className="text-text/70">не начато</span>}

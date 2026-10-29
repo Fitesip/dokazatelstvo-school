@@ -8,6 +8,7 @@ import {
   type EditorAssignment,
   type EditorQuestion,
 } from "./homework-shared";
+import { parseDue } from "./due";
 import { MAX_FILES_PER_ANSWER } from "./storage";
 
 export type { EditorAssignment, EditorOption, EditorQuestion } from "./homework-shared";
@@ -65,12 +66,13 @@ export async function createAssignment(productId: string) {
 export async function saveAssignment(id: string, data: EditorAssignment) {
   const current = await getAssignmentFull(id);
   if (!current) throw new HomeworkError("ДЗ не найдено.");
-  const dueAt = data.dueDate ? new Date(`${data.dueDate}T23:59:00+03:00`) : null;
+  const dueAt = parseDue(data.dueDate, data.dueTime);
+  const dueHasTime = !!dueAt && /^\d{2}:\d{2}$/.test(data.dueTime);
 
   await db.transaction(async (tx) => {
     await tx
       .update(assignment)
-      .set({ title: data.title.trim() || current.title, description: data.description.trim(), dueAt })
+      .set({ title: data.title.trim() || current.title, description: data.description.trim(), dueAt, dueHasTime })
       .where(eq(assignment.id, id));
     if (current.submissions > 0) return;
 
@@ -118,7 +120,7 @@ export async function setPublished(id: string, published: boolean) {
   const a = await getAssignmentFull(id);
   if (!a) throw new HomeworkError("ДЗ не найдено.");
   if (published) {
-    const errors = validateForPublish({ ...a, dueDate: "", description: a.description });
+    const errors = validateForPublish({ ...a, dueDate: "", dueTime: "", description: a.description });
     if (errors.length) throw new HomeworkError(errors.join(" "));
     await db.update(assignment).set({ status: "published", publishedAt: new Date() }).where(eq(assignment.id, id));
   } else {
