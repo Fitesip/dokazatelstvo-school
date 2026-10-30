@@ -30,8 +30,8 @@ async function deadlineEvents(userId: string): Promise<CalEvent[]> {
   return rows.map((r) => ({
     date: dueDate(r.dueAt!),
     time: r.dueHasTime ? dueTime(r.dueAt!) : undefined,
-    title: `Срок ДЗ: ${r.title}`,
-    subtitle: `${r.course} · ${r.status === "checked" ? "проверено" : r.status === "submitted" ? "сдано" : "не сдано"}`,
+    title: `${r.course}: ${r.title}`,
+    subtitle: `срок сдачи · ${r.status === "checked" ? "проверено" : r.status === "submitted" ? "сдано" : "не сдано"}`,
     color: r.status ? "green" : "gold",
   }));
 }
