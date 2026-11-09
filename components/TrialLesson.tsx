@@ -1,4 +1,4 @@
-import { TrialForm } from "./TrialForm";
+import { LeadForm } from "./LeadForm";
 import { Container } from "./ui/Container";
 import { Eyebrow } from "./ui/Eyebrow";
 import { SectionTitle } from "./ui/SectionTitle";
@@ -36,7 +36,12 @@ export function TrialLesson() {
           </div>
         </div>
 
-        <TrialForm />
+        <LeadForm
+          kind="trial"
+          label="Оставьте телефон — перезвоним и подберём время"
+          submit="Записаться"
+          success="Спасибо! Перезвоним, чтобы договориться о пробном уроке."
+        />
       </Container>
     </section>
   );

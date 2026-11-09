@@ -3,6 +3,7 @@ import { toggleLeadAction } from "@/app/actions/admin";
 import { PageTitle } from "@/components/cabinet/Shell";
 import { Table, Td, fmtDate } from "@/components/cabinet/Table";
 import { db, schema } from "@/lib/db";
+import { LEAD_KINDS, type LeadKind } from "@/lib/leads";
 
 export default async function LeadsPage() {
   const leads = await db.select().from(schema.lead).orderBy(desc(schema.lead.createdAt)).limit(500);
@@ -10,16 +11,18 @@ export default async function LeadsPage() {
 
   return (
     <>
-      <PageTitle subtitle={`Новых: ${fresh}. Заявки с формы «Пробный урок» на главной.`}>Заявки</PageTitle>
-      <Table head={["Когда", "Телефон", "Статус", ""]} empty={leads.length ? undefined : "Заявок пока нет."}>
+      <PageTitle subtitle={`Новых: ${fresh}. Заявки со всех форм сайта.`}>Заявки</PageTitle>
+      <Table head={["Когда", "Откуда", "Телефон", "Статус", ""]} empty={leads.length ? undefined : "Заявок пока нет."}>
         {leads.map((l) => (
           <tr key={l.id} className={l.status === "done" ? "opacity-50" : ""}>
             <Td className="whitespace-nowrap">{fmtDate(l.createdAt)}</Td>
+            <Td className="whitespace-nowrap">{LEAD_KINDS[l.kind as LeadKind] ?? l.kind}</Td>
             <Td>
               <a href={`tel:${l.phone.replace(/[^\d+]/g, "")}`} className="font-bold text-blue">
                 {l.phone}
               </a>
               {l.name && <div className="text-text/60">{l.name}</div>}
+              {l.note && <div className="max-w-[420px] whitespace-pre-line pt-1 text-text/80">{l.note}</div>}
             </Td>
             <Td>{l.status === "new" ? <span className="font-bold text-accent">новая</span> : "обработана"}</Td>
             <Td className="text-right">
