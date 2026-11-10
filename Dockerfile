@@ -14,6 +14,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# номер счётчика Метрики попадает в код при сборке
+ARG NEXT_PUBLIC_YM_ID
 # заглушки только на время сборки: к базе при сборке не подключаемся
 # (postgres-js ленивый), настоящие значения приходят из .env при запуске
 RUN DATABASE_URL=postgres://build:build@localhost:5432/build \

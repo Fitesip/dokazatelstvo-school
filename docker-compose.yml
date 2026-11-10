@@ -3,7 +3,10 @@
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_YM_ID: ${NEXT_PUBLIC_YM_ID:-}
     restart: unless-stopped
     env_file: .env
     environment:
