@@ -1,4 +1,5 @@
 import { TEACHER } from "@/lib/data";
+import { LinkButton } from "./Button";
 import { Container } from "./ui/Container";
 import { Eyebrow } from "./ui/Eyebrow";
 import { Mascot } from "./ui/Mascot";
@@ -45,6 +46,10 @@ export function Teacher() {
               </li>
             ))}
           </ul>
+
+          <div className="pt-6">
+            <LinkButton href="/teacher">Подробнее о преподавателе →</LinkButton>
+          </div>
         </div>
       </Container>
     </section>

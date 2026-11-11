@@ -5,7 +5,7 @@ import { Mascot } from "./ui/Mascot";
 
 export function Footer() {
   return (
-    <footer id="contacts" className="scroll-mt-24 bg-bg">
+    <footer className="bg-bg">
       <div className="h-[2px] w-full bg-gradient-to-r from-accent to-teal" />
 
       <div className="mx-auto grid w-full max-w-[1180px] gap-10 px-4 sm:px-8 pb-10 pt-[60px] sm:grid-cols-2 lg:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))]">

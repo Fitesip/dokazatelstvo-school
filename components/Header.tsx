@@ -35,7 +35,7 @@ export function Header() {
           >
             {PHONE.label}
           </a>
-          <PrimaryButton href="#trial" size="sm">
+          <PrimaryButton href="/#trial" size="sm">
             Записаться
           </PrimaryButton>
         </div>
