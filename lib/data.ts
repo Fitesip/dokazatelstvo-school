@@ -35,7 +35,7 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Записаться на пробный урок →", href: "/#trial" },
+  { label: "Курсы и цены", href: "/courses" },
   { label: "Олимпиады", href: "/olympiads" },
   { label: "Учебник", href: "/textbook" },
   { label: "Преподаватель", href: "/teacher" },
@@ -77,79 +77,88 @@ export const PRINCIPLES: Principle[] = [
   },
 ];
 
-/* ---------- Предметы ---------- */
+/* ---------- Курсы и уровни ---------- */
 
-export type ExamType = "ЕГЭ" | "ОГЭ";
+export type TierId = "self" | "support" | "pro";
 
-export interface Subject {
-  exam: ExamType;
-  format: "Группа" | "Инд.";
+export interface Course {
+  id: string;
+  /** название курса — от названия школы */
   title: string;
+  /** прежнее описательное название, под которым курс звучал в канале */
+  subtitle: string;
   description: string;
-  price: string;
-  unit: "/мес" | "/занятие";
-  href: string;
+  /** цена в рублях за месяц по уровням */
+  prices: Record<TierId, number>;
 }
 
-const SUBJECT_DESCRIPTION =
-  "Полный курс по кодификатору с еженедельными пробниками.";
-
-export const SUBJECTS: Subject[] = [
+export const COURSES: Course[] = [
   {
-    exam: "ЕГЭ",
-    format: "Группа",
-    title: "Математика (профиль)",
-    description: SUBJECT_DESCRIPTION,
-    price: "4 200 ₽",
-    unit: "/мес",
-    href: "#",
+    id: "osnovanie",
+    title: "Основание",
+    subtitle: "Первая часть профильного ЕГЭ",
+    description:
+      "Первая часть под полным контролем: теория, алгоритмы, 1500+ заданий, тренажёры, подробные решения и контрольные работы. Каждый номер доводится до автоматизма — без потерянных баллов на «простых» задачах.",
+    prices: { self: 6900, support: 11900, pro: 19900 },
   },
   {
-    exam: "ЕГЭ",
-    format: "Группа",
-    title: "Математика (1-9 задания)",
-    description: SUBJECT_DESCRIPTION,
-    price: "3 900 ₽",
-    unit: "/мес",
-    href: "#",
+    id: "prostranstvo",
+    title: "Пространство",
+    subtitle: "Геометрия второй части ЕГЭ",
+    description:
+      "Только геометрия второй части: планиметрия и стереометрия, основные и дополнительные теоремы, авторские методы решения, координатный метод, чертежи и задачи повышенной сложности с подробными разборами. Геометрия перестаёт быть лотереей.",
+    prices: { self: 8900, support: 14900, pro: 24900 },
   },
   {
-    exam: "ЕГЭ",
-    format: "Инд.",
-    title: "Математика (2 часть)",
-    description: SUBJECT_DESCRIPTION,
-    price: "1 800 ₽",
-    unit: "/занятие",
-    href: "#",
+    id: "teorema",
+    title: "Теорема",
+    subtitle: "Весь профильный ЕГЭ",
+    description:
+      "Весь путь до экзамена в одной программе: восстановление школьной базы, первая и вторая части, теория, практика, тренажёры, пробные экзамены и разбор ошибок.",
+    prices: { self: 10900, support: 17900, pro: 29900 },
   },
   {
-    exam: "ОГЭ",
-    format: "Группа",
-    title: "Математика (1-5 задания)",
-    description: SUBJECT_DESCRIPTION,
-    price: "3 400 ₽",
-    unit: "/мес",
-    href: "#",
+    id: "traektoriya",
+    title: "Траектория",
+    subtitle: "Стратегия набора баллов",
+    description:
+      "Максимум баллов за оставшееся время: приоритетные задания, рациональные методы решения, тематические подборки, тренировка скорости и экзаменационной тактики.",
+    prices: { self: 7900, support: 12900, pro: 21900 },
   },
   {
-    exam: "ОГЭ",
-    format: "Группа",
-    title: "Математика (5-9 задания)",
-    description: SUBJECT_DESCRIPTION,
-    price: "3 600 ₽",
-    unit: "/мес",
-    href: "#",
-  },
-  {
-    exam: "ЕГЭ",
-    format: "Инд.",
-    title: "Математика (1 часть)",
-    description: SUBJECT_DESCRIPTION,
-    price: "1 900 ₽",
-    unit: "/занятие",
-    href: "#",
+    id: "aksioma",
+    title: "Аксиома",
+    subtitle: "Восстановление базы 7–9 классов",
+    description:
+      "Фундамент, без которого не держится ни одна задача ЕГЭ: дроби, степени, корни, уравнения, неравенства, функции, графики и основы геометрии — спокойно и по порядку.",
+    prices: { self: 6900, support: 10900, pro: 17900 },
   },
 ];
+
+export interface Tier {
+  id: TierId;
+  title: string;
+  tagline: string;
+}
+
+export const TIERS: Tier[] = [
+  { id: "self", title: "Самостоятельный", tagline: "Все материалы и видеоразборы — в своём темпе" },
+  { id: "support", title: "С сопровождением", tagline: "Проверка работ и ответы преподавателя на вопросы" },
+  { id: "pro", title: "Персональный PRO", tagline: "Личная стратегия и созвоны с преподавателем" },
+];
+
+/** Что входит в уровень. null — не входит. */
+export const TIER_FEATURES: { label: string; values: Record<TierId, string | null> }[] = [
+  { label: "Доступ к материалам", values: { self: "Включён", support: "Включён", pro: "Включён" } },
+  { label: "Проверка работ", values: { self: null, support: "До 4 в месяц", pro: "До 4 в месяц" } },
+  { label: "Комментарии к ошибкам", values: { self: "Видеоразборы", support: "Персональные", pro: "Персональные" } },
+  { label: "Вопросы по материалу", values: { self: null, support: "До 3 в неделю", pro: "До 3 в неделю" } },
+  { label: "Личные созвоны", values: { self: null, support: null, pro: "2 × 30 минут" } },
+  { label: "Индивидуальная стратегия", values: { self: null, support: "По результатам проверок", pro: "Да" } },
+  { label: "Срок ответа по работе", values: { self: null, support: "До 3 рабочих дней", pro: "До 2 рабочих дней" } },
+];
+
+export const rub = (n: number) => `${n.toLocaleString("ru-RU")} ₽`;
 
 /* ---------- Результаты ---------- */
 
@@ -202,7 +211,7 @@ export const STEPS: Step[] = [
   {
     number: "05",
     title: "Экзамен",
-    text: "Ученик приходит на ЕГЭ или ОГЭ подготовленным — без пробелов и сюрпризов.",
+    text: "Ученик приходит на ЕГЭ подготовленным — без пробелов и сюрпризов.",
   },
 ];
 
@@ -283,7 +292,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
   {
     title: "Разделы",
     links: [
-      { label: "Предметы", href: "/#subjects" },
+      { label: "Курсы и цены", href: "/courses" },
       { label: "Олимпиады", href: "/olympiads" },
       { label: "Учебник", href: "/textbook" },
       { label: "Преподаватель", href: "/teacher" },

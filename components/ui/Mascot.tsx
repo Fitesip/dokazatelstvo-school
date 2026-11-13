@@ -6,6 +6,9 @@ import principles from "@/public/mascot/principles.png";
 import process from "@/public/mascot/process.png";
 import subjects from "@/public/mascot/subjects.png";
 import teacher from "@/public/mascot/teacher.png";
+import tierPro from "@/public/mascot/tier-pro.png";
+import tierSelf from "@/public/mascot/tier-self.png";
+import tierSupport from "@/public/mascot/tier-support.png";
 
 const MASCOTS = {
   hero,
@@ -15,6 +18,10 @@ const MASCOTS = {
   teacher,
   cta,
   footer,
+  // уровни сопровождения: смотрит телевизор / говорит по телефону / уже в МГУ
+  tierSelf,
+  tierSupport,
+  tierPro,
 } satisfies Record<string, StaticImageData>;
 
 export type MascotName = keyof typeof MASCOTS;
