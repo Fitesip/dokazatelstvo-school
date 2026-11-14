@@ -14,7 +14,7 @@ export function Footer() {
             <Logo />
           </div>
           <p className="max-w-[240px] text-[13.5px] leading-[21.6px] text-text">
-            Онлайн-школа подготовки к ЕГЭ и ОГЭ. Системность, понятные
+            Онлайн-школа подготовки к ЕГЭ по математике. Системность, понятные
             объяснения, предсказуемый результат.
           </p>
           <Mascot name="footer" width={120} className="mt-2 w-[120px]" />

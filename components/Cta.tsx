@@ -15,7 +15,7 @@ export function Cta() {
         </p>
         <div className="flex flex-wrap justify-center gap-x-5 gap-y-3 pt-4">
           <PrimaryButton href="#trial">Записаться на пробный урок</PrimaryButton>
-          <OutlineButton href="#subjects">Посмотреть предметы</OutlineButton>
+          <OutlineButton href="/courses">Посмотреть курсы</OutlineButton>
         </div>
       </Container>
     </section>

@@ -5,7 +5,7 @@ import { CONTACT_DETAILS } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Контакты | Доказательство",
-  description: "Связаться с онлайн-школой «Доказательство»: вопросы о подготовке к ЕГЭ и ОГЭ.",
+  description: "Связаться с онлайн-школой «Доказательство»: вопросы о подготовке к ЕГЭ по математике.",
 };
 
 export default function ContactsPage() {
@@ -13,7 +13,7 @@ export default function ContactsPage() {
     <SitePage
       eyebrow="Контакты"
       title="Свяжитесь с нами"
-      intro="Напишите, какой экзамен вы сдаёте и что хотите узнать о подготовке — мы перезвоним."
+      intro="Напишите, в каком вы классе и что хотите узнать о подготовке — мы перезвоним."
     >
       {CONTACT_DETAILS.length > 0 && (
         <ul className="flex flex-col gap-2 text-[17px]">

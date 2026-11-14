@@ -11,12 +11,12 @@ export function Hero() {
         <div className="flex w-full items-center gap-2.5">
           <span className="h-px w-[18px] bg-accent shadow-[0_0_15px_rgb(230_57_70/0.5)]" />
           <span className="glow-red text-xs font-bold uppercase tracking-[1.68px] text-accent">
-            ЕГЭ · ОГЭ · подготовка к 2027
+            Профильный ЕГЭ · подготовка к 2027
           </span>
         </div>
 
         <h1 className="w-full pb-[0.535px] text-[32px] font-bold leading-[1.18] tracking-[-0.46px] text-text sm:text-[46px] sm:leading-[54.28px]">
-          Подготовка к ЕГЭ и ОГЭ:{" "}
+          Подготовка к ЕГЭ по математике:{" "}
           <span className="glow-red text-accent">системно</span>, без лишней
           суеты
         </h1>
@@ -27,7 +27,7 @@ export function Hero() {
         </p>
 
         <div className="flex w-full flex-wrap items-center gap-x-7 gap-y-4 pb-[22.7px] pt-[14.7px]">
-          <PrimaryButton href="#subjects">Выбрать предмет</PrimaryButton>
+          <PrimaryButton href="#subjects">Выбрать курс</PrimaryButton>
           <LinkButton href="#trial">Записаться на пробный урок →</LinkButton>
         </div>
 
